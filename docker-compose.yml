@@ -37,6 +37,7 @@ services:
       # Persistent storage for k3s agent data
       - k3s-agent-data:/var/lib/rancher/k3s
       - k3s-kubelet-data:/var/lib/kubelet
+      - ./volumes/media:/media
 
       # Optional: Mount docker socket if you need to run docker commands
       # WARNING: This is a security risk - only enable if absolutely necessary
