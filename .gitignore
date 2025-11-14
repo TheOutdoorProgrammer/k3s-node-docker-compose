@@ -1,0 +1,24 @@
+# Environment variables with secrets
+.env
+
+# Docker volumes and state
+volumes/
+*.tar.gz
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+backup/
+*.backup

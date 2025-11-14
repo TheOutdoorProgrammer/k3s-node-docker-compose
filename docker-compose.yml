@@ -1,0 +1,102 @@
+services:
+  k3s-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: k3s-agent:latest
+    container_name: k${NODE_NAME:-node1}
+    hostname: ${NODE_NAME:-k3s-agent-node1}
+
+    # CRITICAL: k3s requires privileged mode to manage containers and networking
+    privileged: true
+
+    # Restart policy for production resilience
+    restart: unless-stopped
+
+    environment:
+      # K3s server connection details
+      - K3S_URL=${K3S_URL}
+      - K3S_TOKEN=${K3S_TOKEN}
+      - K3S_NODE_NAME=${NODE_NAME:-k3s-agent-node1}
+      - K3S_WITH_NODE_ID=true
+
+      # Force IPv4 to avoid IPv6/IPv4 mismatch with cluster CIDR
+      - K3S_NODE_IP=${NODE_IP:-0.0.0.0}
+
+      # Additional k3s configuration options (uncomment/modify as needed)
+      # - K3S_KUBECONFIG_MODE=644
+      # - K3S_CLUSTER_SECRET=${K3S_CLUSTER_SECRET}
+
+      # Node labels (optional - useful for workload scheduling)
+      - K3S_NODE_LABEL=${NODE_LABELS:-}
+
+      # Disable certain k3s components if needed
+      # - K3S_DISABLE=${K3S_DISABLE:-}
+
+    volumes:
+      # Persistent storage for k3s agent data
+      - k3s-agent-data:/var/lib/rancher/k3s
+      - k3s-kubelet-data:/var/lib/kubelet
+
+      # Optional: Mount docker socket if you need to run docker commands
+      # WARNING: This is a security risk - only enable if absolutely necessary
+      # - /var/run/docker.sock:/var/run/docker.sock
+
+    # Use tmpfs for /run and /var/run - required for flannel and k3s operations
+    tmpfs:
+      - /run
+      - /var/run
+
+    # Ensure proper capabilities for k3s operations
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_PTRACE
+
+    # Network configuration
+    network_mode: bridge
+
+    # Override CMD to add flannel configuration
+    command:
+      - agent
+      - --with-node-id
+      - --flannel-iface=eth0
+
+    # Optional: Expose ports if you need direct access to services
+    # ports:
+    #   - "10250:10250"  # Kubelet API
+    #   - "10256:10256"  # kube-proxy healthz
+
+    # Security options
+    security_opt:
+      - apparmor:unconfined
+      - seccomp:unconfined
+
+    # Disable IPv6 to avoid conflicts with IPv4 cluster CIDR
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.default.disable_ipv6=1
+
+    # Resource limits (adjust based on your needs)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '4'
+    #       memory: 8G
+    #     reservations:
+    #       cpus: '2'
+    #       memory: 4G
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "k3s-agent"
+
+volumes:
+  k3s-agent-data:
+    driver: local
+  k3s-kubelet-data:
+    driver: local
