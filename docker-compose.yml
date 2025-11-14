@@ -27,9 +27,6 @@ services:
       # - K3S_KUBECONFIG_MODE=644
       # - K3S_CLUSTER_SECRET=${K3S_CLUSTER_SECRET}
 
-      # Node labels (optional - useful for workload scheduling)
-      - K3S_NODE_LABEL=${NODE_LABELS:-}
-
       # Disable certain k3s components if needed
       # - K3S_DISABLE=${K3S_DISABLE:-}
 
@@ -62,6 +59,7 @@ services:
       - agent
       - --with-node-id
       - --flannel-iface=eth0
+      - --node-label=${NODE_LABELS:-}
 
     # Optional: Expose ports if you need direct access to services
     # ports:
