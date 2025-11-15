@@ -40,11 +40,6 @@ services:
       # WARNING: This is a security risk - only enable if absolutely necessary
       # - /var/run/docker.sock:/var/run/docker.sock
 
-    # Use tmpfs for /run and /var/run - required for flannel and k3s operations
-    tmpfs:
-      - /run
-      - /var/run
-
     # Ensure proper capabilities for k3s operations
     cap_add:
       - SYS_ADMIN
@@ -52,13 +47,13 @@ services:
       - SYS_PTRACE
 
     # Network configuration
-    network_mode: bridge
+    network_mode: host
 
     # Override CMD to add flannel configuration
     command:
       - agent
       - --with-node-id
-      - --flannel-iface=eth0
+      - --node-ip=${K3S_NODE_IP}
       - --node-label=${NODE_LABELS:-}
 
     # Optional: Expose ports if you need direct access to services
@@ -70,11 +65,6 @@ services:
     security_opt:
       - apparmor:unconfined
       - seccomp:unconfined
-
-    # Disable IPv6 to avoid conflicts with IPv4 cluster CIDR
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-      - net.ipv6.conf.default.disable_ipv6=1
 
     # Resource limits (adjust based on your needs)
     # deploy:
